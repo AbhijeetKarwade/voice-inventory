@@ -369,16 +369,16 @@ def excel_2JSON(file_name, output_file, *columns):
     # Determine JSON key(s) based on output_file name
     base_name = os.path.basename(output_file).lower()
 
-    if base_name == 'vendors.json':
+    if base_name == '/tmp/vendors.json':
         key_mapping = {
             columns[0]: 'vendor',  # Assuming first column corresponds to 'vendor'
         }
-    elif base_name == 'materials.json':
+    elif base_name == '/tmp/materials.json':
         # Define a mapping from original column names to desired keys
         key_mapping = {
             columns[0]: 'material',  # Assuming first column corresponds to 'material'
         }
-    elif base_name == 'units.json':
+    elif base_name == '/tmp/units.json':
         # Define a mapping from original column names to desired keys
         key_mapping = {
             columns[0]: 'unit',  # Assuming first column corresponds to 'unit'
@@ -404,7 +404,7 @@ def excel_2JSON(file_name, output_file, *columns):
     except (FileNotFoundError, json.JSONDecodeError):
         existing_data = []
 
-    if base_name == 'vendors.json':
+    if base_name == '/tmp/vendors.json':
         # Ensure existing_data is a list of dicts with 'vendor' key
         if not isinstance(existing_data, list):
             existing_data = []
@@ -414,7 +414,7 @@ def excel_2JSON(file_name, output_file, *columns):
                 # Check for duplicates based on 'vendor'
                 if not any(d['vendor'] == item['vendor'] for d in existing_data):
                     existing_data.append(item)
-    elif base_name == 'materials.json':
+    elif base_name == '/tmp/materials.json':
         # Ensure existing_data is a list of dicts with 'material' 
         if not isinstance(existing_data, list):
             existing_data = []
@@ -424,7 +424,7 @@ def excel_2JSON(file_name, output_file, *columns):
                 # Check for duplicates based on both 'material'
                 if not any(d['material'] == item['material'] for d in existing_data): 
                     existing_data.append(item)
-    elif base_name == 'units.json':
+    elif base_name == '/tmp/units.json':
         # Ensure existing_data is a list of dicts with 'unit'
         if not isinstance(existing_data, list):
             existing_data = []
@@ -477,8 +477,6 @@ def excel_2JSON(file_name, output_file, *columns):
     with open(output_file, 'w') as f:
         json.dump(existing_data, f, indent=4)
 
-with open('/tmp/vendors.json', 'w') as vendors_file:
-    json.dump(vendors, vendors_file)
 
 # Speak chat engine
 # def speak(text):
