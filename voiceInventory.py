@@ -441,7 +441,7 @@ def excel_2JSON(file_name, output_file, *columns):
         existing_data.extend(renamed_data)
 
     # Remove duplicates for materials.json based on both 'material' and 'unit'
-    if base_name == 'vendors.json':
+    if base_name == '/tmp/vendors.json':
         # Keep the first occurrence of each vendor
         unique_data = []
         seen_vendors = set()
@@ -450,7 +450,7 @@ def excel_2JSON(file_name, output_file, *columns):
                 seen_vendors.add(item['vendor'])
                 unique_data.append(item)
         existing_data = unique_data
-    elif base_name == 'materials.json':
+    elif base_name == '/tmp/materials.json':
         # Keep the first occurrence of each (material, unit) pair
         unique_data = []
         seen_pairs = set()
@@ -461,7 +461,7 @@ def excel_2JSON(file_name, output_file, *columns):
                     seen_pairs.add(pair)
                     unique_data.append(item)
         existing_data = unique_data
-    elif base_name == 'units.json':
+    elif base_name == '/tmp/units.json':
         # Keep the first occurrence of each (material, unit) pair
         unique_data = []
         seen_pairs = set()
@@ -477,6 +477,8 @@ def excel_2JSON(file_name, output_file, *columns):
     with open(output_file, 'w') as f:
         json.dump(existing_data, f, indent=4)
 
+with open('/tmp/vendors.json', 'w') as vendors_file:
+    json.dump(vendors, vendors_file)
 
 # Speak chat engine
 # def speak(text):
