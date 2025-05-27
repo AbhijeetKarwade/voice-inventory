@@ -3,7 +3,6 @@ import pandas as pd
 from reportlab.lib.pagesizes import letter
 import matplotlib.pyplot as plt
 from pandas.plotting import table
-import pyttsx3
 from datetime import datetime
 import re
 from unidecode import unidecode
@@ -488,14 +487,8 @@ def excel_2JSON(file_name, output_file, *columns):
 #     engine.runAndWait()
 
 def speak(text):
-    try:
-        engine = pyttsx3.init()
-        engine.setProperty("rate", 150)
-        print(text)
-        engine.say(text)
-        engine.runAndWait()
-    except:
-        print(f"[Speak disabled] {text}")
+    print(f"[Speak disabled] {text}")  # Only log text on Render
+
 
 # Saves the record to JSON (inventory.json)
 def save_2json(sessionType, data, filename="inventory.json"):
