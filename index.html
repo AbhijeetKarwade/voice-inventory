@@ -1,0 +1,895 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Voice Inventory Manager</title>
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Bootstrap Icons -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+  <style>
+    .voice-button {
+      width: 100px;
+      height: 100px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.3s ease;
+      position: relative;
+    }
+    
+    .voice-button.listening {
+      background-color: #0d6efd;
+      color: white;
+      animation: pulse 2s infinite;
+    }
+    
+    @keyframes pulse {
+      0% {
+        transform: scale(0.95);
+        box-shadow: 0 0 0 0 rgba(13, 110, 253, 0.7);
+      }
+      
+      70% {
+        transform: scale(1);
+        box-shadow: 0 0 0 15px rgba(13, 110, 253, 0);
+      }
+      
+      100% {
+        transform: scale(0.95);
+        box-shadow: 0 0 0 0 rgba(13, 110, 253, 0);
+      }
+    }
+    
+    .card-inventory {
+      transition: all 0.3s ease;
+    }
+    
+    .card-inventory:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+    }
+  </style>
+</head>
+  <body class="bg-light">
+    <div class="container py-4">
+      <!-- Header -->
+      <header class="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom">
+        <div class="d-flex align-items-center">
+          <i class="bi bi-mic fs-3 me-2 text-primary"></i>
+          <label class="label success rounded-pill flex flex-column" style="width: 290px; height: 40px; background-color: #04AA6D; text-align: center; padding-top: 8px;">
+          <h1 class="h6 mb-2">Voice Inventory Manager</h1></label>
+        </div>
+        <button class="btn rounded-pill" data-bs-toggle="modal" data-bs-target="#settingsModal" onclick="getData()">
+          <i class="bi bi-gear me-1"></i>
+        </button>
+      </header>
+
+      <!-- Voice Control Section -->
+      <section class="my-4 text-center">
+        <div class="card shadow-sm p-4 mb-4">
+          <div class="d-flex justify-content-center align-items-center gap-5">
+
+            <!-- First Voice Control Button and Status -->
+            <div class="d-flex flex-column align-items-center">
+              
+              <button id="inwardButton" class="voice-button btn btn-light">
+                <i class="bi bi-mic fs-1"></i>
+              </button>
+              <h5 id="inwardStatus" class="mt-2">Inward</h5>
+            </div>
+
+            <!-- Second Voice Control Button and Status -->
+            <div class="d-flex flex-column align-items-center">
+              
+              <button id="outwardButton" class="voice-button btn btn-light">
+                <i class="bi bi-mic fs-1"></i>
+              </button>
+              <h5 id="outwardStatus" class="mt-2">Outward</h5>
+            </div>
+          </div>
+          <div id="transcripts" class="mt-2 p-3 bg-light rounded d-none w-100 max-width-md"></div>
+          <div class="text-muted mt-3">
+            <p class="fw-medium">"Add Inward/Outward Inventories."</p>
+          </div>
+        </div>
+        
+      </section>
+      
+      <!-- Inventory Table for Desktop -->
+      <section class="my-4 d-none d-md-block">
+        <div class="card shadow-sm p-3">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h2 class="h5 mb-0">Inventory Items</h2>
+            <div style="padding-left: 700px;"><button class="btn btn-sm btn-outline-primary rounded-pill" style="width: 100px;" onclick="saveInventory()">
+              <i class="bi bi-save me-1"></i> Save
+            </button></div>
+            <div class="dropdown">
+              <button class="btn btn-sm btn-outline-primary rounded-pill dropdown-toggle" style="width: 100px;" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                <i class="bi bi-download me-1"></i> Export
+              </button>
+              <ul class="dropdown-menu">
+                <input type="text" id="fileNameText" class="form-control rounded-pill" placeholder="File name">
+                <li><a class="dropdown-item" href="#" onclick="exportEntries('csv')">CSV</a></li>
+                <li><a class="dropdown-item" href="#" onclick="exportEntries('excel')">Excel</a></li>
+                <li><a class="dropdown-item" href="#" onclick="exportEntries('pdf')">PDF</a></li>
+              </ul>
+            </div>
+          </div>
+          <div class="table-responsive">
+            <table class="table table-hover">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Time</th>
+                  <th>Vendor</th>
+                  <th>Item</th>
+                  <th>Quantity</th>
+                  <th>Session</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="inventoryTableBody">
+                <!-- Items will be dynamically added here -->
+              </tbody>
+            </table>
+          </div>
+          <div id="emptyState" class="text-center py-5">
+            <i class="bi bi-clipboard-x fs-1 text-muted"></i>
+            <p class="mt-2 mb-0 text-muted">No inventory items yet. Use voice commands to add items.</p>
+          </div>
+        </div>
+      </section>
+      
+      <!-- Inventory Cards for Mobile -->
+      <section class="my-4 d-block d-md-none">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h2 class="h5 mb-0">Inventory Items</h2>
+          <button class="btn btn-sm btn-outline-primary rounded-pill">
+            <i class="bi bi-download me-1"></i> Export
+          </button>
+        </div>
+        <div id="inventoryCards" class="row g-3">
+          <!-- Cards will be dynamically added here -->
+        </div>
+        <div id="emptyStateMobile" class="text-center py-5">
+          <i class="bi bi-clipboard-x fs-1 text-muted"></i>
+          <p class="mt-2 mb-0 text-muted">No inventory items yet. Use voice commands to add items.</p>
+        </div>
+      </section>
+    </div>
+    
+    <!-- Settings Modal -->
+    <div class="modal fade" id="settingsModal" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Settings</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+
+          <div class="modal-body">         
+            <div class="mb-3">
+              <label class="form-label">Vendors</label>
+              <div class="input-group" style="padding-bottom:10px">
+                <input type="text" id="newVendor" class="form-control" placeholder="Add New Vendor">
+                <button class="btn btn-outline-secondary" type="button" id="addVendorButton" onclick="addVendor()">
+                  <i class="bi bi-plus"></i>
+                </button>
+              </div>
+              <div class="input-group" style="padding-bottom:10px">
+                <div class="mb-3 input-group">
+                  <select class="form-control" placeholder="Select Vendor" id="vendorSelector">
+                  </select>
+                  <button class="btn btn-outline-secondary" id="deleteVendorButton" onclick="deleteVendor()">
+                    <i class="bi bi-trash"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label">Materials</label>
+              <div class="input-group" style="padding-bottom:10px">
+                <input type="text" id="newMaterial" class="form-control" placeholder="Add New Material" style="width: 60%">
+                <input class="form-control" placeholder="Unit" list="unitSelector" id="newUnit" style="width: 10%">
+                <datalist id="unitSelector"> </datalist>
+                <button class="btn btn-outline-secondary" type="button" id="addMaterialButton" onclick="addMaterial()">
+                  <i class="bi bi-plus"></i>
+                </button>
+              </div>
+              <div class="input-group" style="padding-bottom:10px">
+                <div class="mb-3 input-group">
+                  <select class="form-control" placeholder="Select Material" id="materialSelector" style="width: 60%">        
+                  </select>
+                  <input type="text" placeholder="Unit" id="materialUnit" class="form-control" style="width: 10%" readonly>
+                  <button class="btn btn-outline-secondary" id="deleteMaterialButton" onclick="deleteMaterial()">
+                    <i class="bi bi-trash"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label">Import Vendor List (Excel)</label>
+              <div class="input-group" style="padding-bottom:10px">
+                <input type="file" id="vendorFileInput" class="form-control" accept=".xlsx,.xls" style="width: 60%">
+                <input class="form-control" placeholder="Column Name" id="vendorColumn" style="width: 30%">
+                <button class="btn btn-outline-secondary" type="button" id="importVendor" onclick="uploadExcel('vendors')">
+                  <i class="bi bi-upload"></i>
+                </button>
+              </div>
+              <label class="form-label">Import Material List (Excel)</label>
+              <div class="input-group" style="padding-bottom:10px">
+                <input type="file" id="materialFileInput" class="form-control" accept=".xlsx,.xls" style="width: 60%">
+                <input class="form-control" placeholder="Column Name" id="materialColumn" style="width: 30%">
+                <button class="btn btn-outline-secondary" type="button" id="importMaterial" onclick="uploadExcel('materials')">
+                  <i class="bi bi-upload"></i>
+                </button>
+              </div>
+              <label class="form-label">Import Unit List (Excel)</label>
+              <div class="input-group" style="padding-bottom:10px">
+                <input type="file" id="unitFileInput" class="form-control" accept=".xlsx,.xls" style="width: 60%">
+                <input class="form-control" placeholder="Column Name" id="unitColumn" style="width: 30%">
+                <button class="btn btn-outline-secondary" type="button" id="importUnit" onclick="uploadExcel('units')">
+                  <i class="bi bi-upload"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="modal-footer">
+            <!-- <div style="padding-right:260px"><button type="button" class="btn btn-secondary" id="clearInventory()" onclick="uploadExcel('units')">Clear Inventory</button></div> -->
+            
+            <div class="dropdown" style="padding-right:200px">
+              <button class="btn btn-secondary dropdown-toggle" style="width: 140px;" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                <i class="bi bi-download me-1"></i> Clear JSON
+              </button>
+              <ul class="dropdown-menu">
+                <li><a class="dropdown-item" href="#" onclick="clearInventory('inventory')">Inventory</a></li>
+                <li><a class="dropdown-item" href="#" onclick="clearInventory('vendor')">Vendor</a></li>
+                <li><a class="dropdown-item" href="#" onclick="clearInventory('material')">Material</a></li>
+                <li><a class="dropdown-item" href="#" onclick="clearInventory('unit')">Unit</a></li>
+              </ul>
+            </div>
+            <div style="padding-right:30px">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Toast for notifications -->
+    <div class="toast-container position-fixed bottom-0 end-0 p-3">
+      <div id="notificationToast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="toast-header">
+          <strong class="me-auto" id="toastTitle">Notification</strong>
+          <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+        <div class="toast-body" id="toastMessage">
+          Item added successfully.
+        </div>
+      </div>
+    </div>
+    
+    <!-- Bootstrap and other scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+
+      // Sample inventory data array
+      let inventoryItems = [];
+
+      function clearModal(){
+        vendorSelector.innerHTML = '';
+        materialSelector.innerHTML = '';
+      }
+
+      function getData(){
+        const url = '/data'; // Path to the data endpoint
+        fetch(url)
+        .then(response => response.json())
+        .then(data => {
+          // Clear existing options before populating
+          vendorSelector.innerHTML = '';
+          materialSelector.innerHTML = '';
+          unitSelector.innerHTML = '';
+            
+          data.vendors.forEach(vendor => {              
+            vendorSelector.options[vendorSelector.options.length] = new Option(vendor.vendor);
+          });
+
+          data.materials.forEach(material => {              
+            materialSelector.options[materialSelector.options.length] = new Option(material.material);
+          });
+
+          data.units.forEach(unit => {
+            const option = document.createElement('option');
+            option.value = unit.unit;
+            unitSelector.appendChild(option);
+          });
+          
+        })
+        .catch(error => console.error('Error fetching data:', error));
+      }
+
+      function addVendor(){
+        const newVendorInput = document.getElementById('newVendor');
+        const newVendor = newVendorInput.value.trim();
+        if (newVendor) {
+          fetch('/add_vendor', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ vendor: newVendor })
+          })
+          .then(response => response.json())
+          .then(data => {
+            if (data.message) {
+              console.log(`Vendor added: ${newVendor}`);
+              newVendorInput.value = ''; // Clear input field
+              getData();
+              showToast('Success', data.message);
+            }
+          })
+          .catch(error => console.error('Error adding vendor:', error));
+        }
+      }
+
+      function addMaterial(){        
+        const newMaterialInput = document.getElementById('newMaterial');
+        const newMaterial = newMaterialInput.value.trim();
+        const newMaterialUnitInput = document.getElementById('newUnit');
+        const newMaterialUnit = newMaterialUnitInput.value.trim();
+
+        if (newMaterial) {
+          fetch('/add_material', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ material: newMaterial, unit: newMaterialUnit })
+          })
+          .then(response => response.json())
+          .then(data => {
+            if (data.message) {
+              console.log(`Material added: ${newMaterial} (${newMaterialUnit})`);
+              newMaterialInput.value = ''; // Clear input field
+              showToast('Success', data.message);
+              getData();
+            }
+          })
+          .catch(error => console.error('Error adding material:', error));
+        }
+      }
+
+      function deleteVendor() {
+        const vendorSelector = document.getElementById('vendorSelector');
+        const vendor = vendorSelector.value;
+        if (vendor) {
+          fetch('/delete_vendor', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ vendor: vendor })
+          })
+          .then(response => {
+            if (!response.ok) {
+              throw new Error('Network response was not ok');
+            }
+            return response.json();
+          })
+          .then(data => {
+            if (data.success) {
+              console.log(`Deleted vendor: ${vendor}`);
+              vendorSelector.value = ''; // Clear the selection
+              showToast('Success', "Vendor deleted successfully!");
+              getData(); // Refresh the vendor dropdown
+            } else {
+              console.error('Error deleting vendor:', data.message);
+            }
+          })
+          .catch(error => console.error('Error:', error));
+        }
+      }
+
+      function deleteMaterial() {
+        const materialSelector = document.getElementById('materialSelector');
+        const material = materialSelector.value;
+        if (material) {
+          fetch('/delete_material', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ material: material })
+          })
+          .then(response => {
+            if (!response.ok) {
+              throw new Error('Network response was not ok');
+            }
+            return response.json();
+          })
+          .then(data => {
+            if (data.success) {
+              console.log(`Deleted material: ${material}`);
+              materialSelector.value = ''; // Clear the selection
+              showToast('Success', "Material deleted successfully!");
+              getData(); // Refresh the material dropdown
+            } else {
+              console.error('Error deleting material:', data.message);
+            }
+          })
+          .catch(error => console.error('Error:', error));
+        }
+      }
+
+      // POST request - to clear entries
+      async function clearInventory(fileType) {
+        if (fileType === 'inventory')
+          inputFile = 'inventory.json';
+        else if (fileType === 'vendor')
+          inputFile = 'vendors.json';
+        else if (fileType === 'material') 
+          inputFile = 'materials.json';
+        else if (fileType === 'unit')
+          inputFile = 'units.json';
+
+        const response = await fetch('/clear_entries', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({filename: inputFile}) // Send data to Flask
+        });
+        const result = await response.json(); // Get response from Flask
+        return result;
+      }
+
+      // POST request - to save entries
+      async function saveInventory() {
+        if (inventoryItems.length === 0) {
+          showToast('Error', 'No inventory items to save.');
+          return;
+        }
+
+        fetch('/save_inventory', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ items: inventoryItems })
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.message) {
+            showToast('Success', data.message);
+            inventoryItems = [];
+            window.updateInventoryUI();
+          } else {
+            showToast('Error', data.error || 'Failed to save inventory.');
+          }
+        })
+        .catch(error => {
+          console.error('Error saving inventory:', error);
+          showToast('Error', 'Failed to save inventory.');
+        });
+      };
+
+      // POST request - to export entries
+      async function exportEntries(format) {
+        const file_name = document.getElementById('fileNameText');
+
+        if(file_name.value)
+          filename = file_name.value        
+        else
+          filename = 'output_file'        
+
+        const response = await fetch('/export_entries', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({filename: filename, format: format}) // Send data to Flask
+        });
+        const result = await response.json(); // Get response from Flask
+        return result;
+      }
+
+      function uploadExcel(type) {
+        let fileInput, outputFile, columns;
+        
+        if (type === 'vendors') {
+          fileInput = document.getElementById('vendorFileInput');
+          column = document.getElementById('vendorColumn')
+          outputFile = 'vendors.json';
+          columns = column.value;
+        } else if (type === 'materials') {
+          fileInput = document.getElementById('materialFileInput');
+          column = document.getElementById('materialColumn')
+          outputFile = 'materials.json';
+          columns = column.value;
+        } else if (type === 'units') {
+          fileInput = document.getElementById('unitFileInput');
+          column = document.getElementById('unitColumn')
+          outputFile = 'units.json';
+          columns = column.value;
+        }
+
+        const file = fileInput.files[0];
+        if (!file) {
+          showToast('Error', 'Please select a file.');
+          return;
+        }
+
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('output_file', outputFile);
+        formData.append('columns', columns);
+
+        fetch('/import_excel', {
+          method: 'POST',
+          body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.message) {
+            showToast('Success', data.message);
+            fileInput.value = ''; // Clear the file input
+            getData(); // Refresh the dropdowns
+          } else {
+            showToast('Error', data.error || 'Failed to convert Excel to JSON.');
+          }
+        })
+        .catch(error => {
+          console.error('Error converting Excel:', error);
+          showToast('Error', 'Failed to convert Excel to JSON.');
+        });
+      }
+
+      // Function to show a toast notification
+      function showToast(title, message) {
+        document.getElementById('toastTitle').textContent = title;
+        document.getElementById('toastMessage').textContent = message;
+        const toast = new bootstrap.Toast(document.getElementById('notificationToast'));
+        toast.show();
+      }
+
+      // Sample JavaScript to handle UI interactions and voice recognition
+      document.addEventListener('DOMContentLoaded', function() {
+        // const voiceButton = document.getElementById('voiceButton');
+        const voiceStatus = document.getElementById('voiceStatus');
+        const transcript = document.getElementById('transcript');
+        const vendorDropdownButton = document.getElementById('vendorDropdownButton');
+
+        const inwardButton = document.getElementById('inwardButton');
+        const outwardButton = document.getElementById('outwardButton');
+        const inwardStatus = document.getElementById('inwardStatus');
+        const outwardStatus = document.getElementById('outwardStatus');
+        
+        // Sample inventory data array
+        // let inventoryItems = [];
+        
+        // Function to show a toast notification
+        function showToast(title, message) {
+          document.getElementById('toastTitle').textContent = title;
+          document.getElementById('toastMessage').textContent = message;
+          const toast = new bootstrap.Toast(document.getElementById('notificationToast'));
+          toast.show();
+        }
+
+        // Function to update the inventory
+        async function removeInventory(entry2Delete) {
+            const response = await fetch('/remove_entry', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({entry: entry2Delete}) // Send data to Flask
+            });
+            const result = await response.json(); // Get response from Flask
+            return result;
+        }
+
+        // Function to update the inventory UI
+        function updateInventoryUI() {
+          const tableBody = document.getElementById('inventoryTableBody');
+          const cardsContainer = document.getElementById('inventoryCards');
+          const emptyState = document.getElementById('emptyState');
+          const emptyStateMobile = document.getElementById('emptyStateMobile');
+          
+          // Clear existing content
+          tableBody.innerHTML = '';
+          cardsContainer.innerHTML = '';
+          
+          if (inventoryItems.length === 0) {
+            emptyState.classList.remove('d-none');
+            emptyStateMobile.classList.remove('d-none');
+          } else {
+            emptyState.classList.add('d-none');
+            emptyStateMobile.classList.add('d-none');
+            
+            // Update table view for desktop
+            inventoryItems.forEach((item, index) => {
+              const row = document.createElement('tr');
+              row.innerHTML = `
+                <td>${index + 1}</td>
+                <td>${item.date}</td>
+                <td>${item.vendor}</td>
+                <td>${item.item}</td>                
+                <td>${item.quantity} ${item.unit}</td>
+                <td>${item.session}</td>
+                <td>
+                  <button class="btn btn-sm btn-outline-danger" onclick="removeItem(${index})">
+                    <i class="bi bi-trash"></i>
+                  </button>
+                </td>
+              `;
+              tableBody.appendChild(row);
+              
+              // Create card for mobile view
+              const card = document.createElement('div');
+              card.className = 'col-12';
+              card.innerHTML = `
+                <div class="card card-inventory">
+                  <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                      <span class="badge bg-primary rounded-pill mb-2">#${index + 1}</span>
+                      <button class="btn btn-sm text-danger" onclick="removeItem(${index})">
+                        <i class="bi bi-trash"></i>
+                      </button>
+                    </div>
+                    <h5 class="card-title">${item.item}</h5>
+                    <h6 class="card-subtitle mb-2 text-muted">${item.vendor}</h6>
+                    <p class="card-text">${item.quantity} ${item.unit}</p>
+                  </div>
+                </div>
+              `;
+              cardsContainer.appendChild(card);
+            });
+          }
+        }
+
+        window.updateInventoryUI = updateInventoryUI;
+        
+        // Function to add an inventory item
+        function addInventoryItem(date, vendor, item, quantity, unit, session) {
+          inventoryItems.push({
+            date: date,
+            vendor: vendor,
+            item: item,
+            quantity: quantity,
+            unit: unit,
+            session: session
+          });
+          updateInventoryUI();
+          showToast('Item Added', `Added ${quantity} ${unit} of ${item} from ${vendor} on $(date)`);
+        }
+        
+        // Function to remove an inventory item
+        window.removeItem = function(index) {
+          inventoryItems.splice(index, 1);
+          updateInventoryUI();
+          showToast('Item Removed', 'The inventory item has been removed');
+        };
+        
+        // Initialize the UI
+        updateInventoryUI();
+
+        // Function to update the inventory UI
+        function updateInventoryUI() {
+          const tableBody = document.getElementById('inventoryTableBody');
+          const cardsContainer = document.getElementById('inventoryCards');
+          const emptyState = document.getElementById('emptyState');
+          const emptyStateMobile = document.getElementById('emptyStateMobile');
+          
+          // Clear existing content
+          tableBody.innerHTML = '';
+          cardsContainer.innerHTML = '';
+          
+          if (inventoryItems.length === 0) {
+            emptyState.classList.remove('d-none');
+            emptyStateMobile.classList.remove('d-none');
+          } else {
+            emptyState.classList.add('d-none');
+            emptyStateMobile.classList.add('d-none');
+            
+            // Update table view for desktop
+            inventoryItems.forEach((item, index) => {
+              const row = document.createElement('tr');
+              row.innerHTML = `
+                <td>${index + 1}</td>
+                <td>${item.date}</td>
+                <td>${item.vendor}</td>
+                <td>${item.item}</td>
+                <td>${item.quantity} ${item.unit}</td>
+                <td>${item.session}</td>
+                <td>
+                  <button class="btn btn-sm btn-outline-danger" onclick="removeItem(${index})">
+                    <i class="bi bi-trash"></i>
+                  </button>
+                </td>
+              `;
+              tableBody.appendChild(row);
+              
+              // Create card for mobile view
+              const card = document.createElement('div');
+              card.className = 'col-12';
+              card.innerHTML = `
+                <div class="card card-inventory">
+                  <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                      <span class="badge bg-primary rounded-pill mb-2">#${index + 1}</span>
+                      <button class="btn btn-sm text-danger" onclick="removeItem(${index})">
+                        <i class="bi bi-trash"></i>
+                      </button>
+                    </div>
+                    <h5 class="card-title">${item.item}</h5>
+                    <h6 class="card-subtitle mb-2 text-muted">${item.vendor}</h6>
+                    <p class="card-text">${item.quantity} ${item.unit}</p>
+                  </div>
+                </div>
+              `;
+              cardsContainer.appendChild(card);
+            });
+          }
+        }
+
+        // Function to add an inventory item
+        window.addInventoryItem = function(date, vendor, item, quantity, unit, session){
+          inventoryItems.push({
+            date: date,
+            vendor: vendor,
+            item: item,
+            quantity: quantity,
+            unit: unit,
+            session: session
+          });
+          updateInventoryUI();
+          showToast('Item Added', `Added ${quantity} ${unit} of ${item} from ${vendor} on ${date}`);
+        }
+        
+        // Function to remove an inventory item
+        window.removeItem = function(index) {
+          removeInventory(inventoryItems.at(index));
+          inventoryItems.splice(index, 1);
+          updateInventoryUI();
+          showToast('Item Removed', 'The inventory item has been removed');
+        };
+        
+        // Voice button click handler (would normally implement actual speech recognition)
+        inwardButton.addEventListener('click', function() {
+          if (!outwardButton.classList.contains('listening')) {
+            if (inwardButton.classList.contains('listening')) {
+              // Stop listening
+              inwardButton.classList.remove('listening');
+              inwardStatus.textContent = 'Inward';
+              showToast('Success', 'Inward session stopped.');
+              stopListening('inward').then(data => {
+                console.log(data);
+                // showToast('Success', data.message);
+              });
+            } else {
+              // Start listening
+              inwardButton.classList.add('listening');
+              inwardStatus.textContent = 'Listening...';
+              showToast('Success', 'Inward session started.');
+              startListening('inward').then(data => {
+                console.log(data);
+                // showToast('Success', data.message);
+              });
+            }
+          }
+        });   
+
+        // Voice button click handler (would normally implement actual speech recognition)
+        outwardButton.addEventListener('click', function() {
+          if (!inwardButton.classList.contains('listening')) {
+            if (outwardButton.classList.contains('listening')) {
+              // Stop listening
+              outwardButton.classList.remove('listening');
+              outwardStatus.textContent = 'Outward';
+              showToast('Success', 'Outward session stopped.');
+              stopListening('outward').then(data => {
+                console.log(data);
+              });
+            } else {
+              // Start listening
+              outwardButton.classList.add('listening');
+              outwardStatus.textContent = 'Listening...';
+              showToast('Success', 'Outward session started.');
+              startListening('outward').then(data => {
+                console.log(data);
+              });
+            }          
+          }
+        });
+
+        // POST request - to start listening
+        async function startListening(sessionType) {
+            const response = await fetch('/start_listening', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({session: sessionType}) // Send data to Flask
+            });
+            const result = await response.json(); // Get response from Flask
+            return result;
+        }
+
+        // POST request - to stop listening
+        async function stopListening(sessionType) {
+            const response = await fetch('/stop_listening', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({session: sessionType}) // Send data to Flask
+            });
+            const result = await response.json(); // Get response from Flask
+            return result;
+        }
+
+        materialSelector.addEventListener('change', function() {
+          const selectedMaterial = this.options[this.selectedIndex].text;
+          
+          const url = '/get_materials'; // Path to the data endpoint
+          fetch(url)
+          .then(response => response.json())
+          .then(data => {                    
+            data.materials.forEach(material => {              
+              if(material.material == selectedMaterial){
+                materialUnit.value = material.unit;
+                console.log('Selected material:', selectedMaterial, material.unit); 
+              }
+            });          
+          })
+        .catch(error => console.error('Error fetching data:', error));
+        });
+
+      });
+
+      // POST request - to start listening
+      async function session_response() {
+          const response = await fetch('/session_complete', {
+              method: 'POST',
+              headers: {
+                  'Content-Type': 'application/json',
+              },
+              body: JSON.stringify() // Send data to Flask
+          });
+          const result = await response.json(); // Get response from Flask
+          return result;
+      }
+
+
+      setInterval(() => {
+        fetch('/session_status')
+            .then(response => response.json())
+            .then(data => {
+                // console.log("Data:")
+                // console.log(inventoryItems.at(0));
+                
+                if (!data.active) {
+                  // showToast('Success', 'Session completed.');
+                  inwardStatus.textContent = 'Inward';
+                  outwardStatus.textContent = 'Outward';
+                  inwardButton.classList.remove('listening');
+                  outwardButton.classList.remove('listening');
+                }
+                if(data.entry.length){                
+                  addInventoryItem(data.entry[0][0], data.entry[0][1], data.entry[0][2], data.entry[0][3], data.entry[0][4], data.entry[0][5]);
+                    
+                  session_response()
+                }
+
+            });
+      }, 5000); // Poll every 5 seconds
+    </script>
+  </body>
+</html>
