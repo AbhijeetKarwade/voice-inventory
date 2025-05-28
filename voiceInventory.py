@@ -3,6 +3,7 @@ import pandas as pd
 from reportlab.lib.pagesizes import letter
 import matplotlib.pyplot as plt
 from pandas.plotting import table
+import pyttsx3
 from datetime import datetime
 import re
 from unidecode import unidecode
@@ -369,16 +370,16 @@ def excel_2JSON(file_name, output_file, *columns):
     # Determine JSON key(s) based on output_file name
     base_name = os.path.basename(output_file).lower()
 
-    if base_name == '/tmp/vendors.json':
+    if base_name == 'vendors.json':
         key_mapping = {
             columns[0]: 'vendor',  # Assuming first column corresponds to 'vendor'
         }
-    elif base_name == '/tmp/materials.json':
+    elif base_name == 'materials.json':
         # Define a mapping from original column names to desired keys
         key_mapping = {
             columns[0]: 'material',  # Assuming first column corresponds to 'material'
         }
-    elif base_name == '/tmp/units.json':
+    elif base_name == 'units.json':
         # Define a mapping from original column names to desired keys
         key_mapping = {
             columns[0]: 'unit',  # Assuming first column corresponds to 'unit'
@@ -404,7 +405,7 @@ def excel_2JSON(file_name, output_file, *columns):
     except (FileNotFoundError, json.JSONDecodeError):
         existing_data = []
 
-    if base_name == '/tmp/vendors.json':
+    if base_name == 'vendors.json':
         # Ensure existing_data is a list of dicts with 'vendor' key
         if not isinstance(existing_data, list):
             existing_data = []
@@ -414,7 +415,7 @@ def excel_2JSON(file_name, output_file, *columns):
                 # Check for duplicates based on 'vendor'
                 if not any(d['vendor'] == item['vendor'] for d in existing_data):
                     existing_data.append(item)
-    elif base_name == '/tmp/materials.json':
+    elif base_name == 'materials.json':
         # Ensure existing_data is a list of dicts with 'material' 
         if not isinstance(existing_data, list):
             existing_data = []
@@ -424,7 +425,7 @@ def excel_2JSON(file_name, output_file, *columns):
                 # Check for duplicates based on both 'material'
                 if not any(d['material'] == item['material'] for d in existing_data): 
                     existing_data.append(item)
-    elif base_name == '/tmp/units.json':
+    elif base_name == 'units.json':
         # Ensure existing_data is a list of dicts with 'unit'
         if not isinstance(existing_data, list):
             existing_data = []
@@ -441,7 +442,7 @@ def excel_2JSON(file_name, output_file, *columns):
         existing_data.extend(renamed_data)
 
     # Remove duplicates for materials.json based on both 'material' and 'unit'
-    if base_name == '/tmp/vendors.json':
+    if base_name == 'vendors.json':
         # Keep the first occurrence of each vendor
         unique_data = []
         seen_vendors = set()
@@ -450,7 +451,7 @@ def excel_2JSON(file_name, output_file, *columns):
                 seen_vendors.add(item['vendor'])
                 unique_data.append(item)
         existing_data = unique_data
-    elif base_name == '/tmp/materials.json':
+    elif base_name == 'materials.json':
         # Keep the first occurrence of each (material, unit) pair
         unique_data = []
         seen_pairs = set()
@@ -461,7 +462,7 @@ def excel_2JSON(file_name, output_file, *columns):
                     seen_pairs.add(pair)
                     unique_data.append(item)
         existing_data = unique_data
-    elif base_name == '/tmp/units.json':
+    elif base_name == 'units.json':
         # Keep the first occurrence of each (material, unit) pair
         unique_data = []
         seen_pairs = set()
@@ -479,15 +480,12 @@ def excel_2JSON(file_name, output_file, *columns):
 
 
 # Speak chat engine
-# def speak(text):
-#     engine = pyttsx3.init()
-#     engine.setProperty("rate", 150)
-#     print(text)
-#     engine.say(text)
-#     engine.runAndWait()
-
 def speak(text):
-    print(f"[Speak disabled] {text}")  # Only log text on Render
+    engine = pyttsx3.init()
+    engine.setProperty("rate", 150)
+    print(text)
+    engine.say(text)
+    engine.runAndWait()
 
 
 # Saves the record to JSON (inventory.json)
