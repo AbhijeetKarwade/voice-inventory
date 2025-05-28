@@ -1,895 +1,695 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Voice Inventory Manager</title>
-  <!-- Bootstrap CSS -->
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-  <!-- Bootstrap Icons -->
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
-  <style>
-    .voice-button {
-      width: 100px;
-      height: 100px;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: all 0.3s ease;
-      position: relative;
-    }
-    
-    .voice-button.listening {
-      background-color: #0d6efd;
-      color: white;
-      animation: pulse 2s infinite;
-    }
-    
-    @keyframes pulse {
-      0% {
-        transform: scale(0.95);
-        box-shadow: 0 0 0 0 rgba(13, 110, 253, 0.7);
-      }
-      
-      70% {
-        transform: scale(1);
-        box-shadow: 0 0 0 15px rgba(13, 110, 253, 0);
-      }
-      
-      100% {
-        transform: scale(0.95);
-        box-shadow: 0 0 0 0 rgba(13, 110, 253, 0);
-      }
-    }
-    
-    .card-inventory {
-      transition: all 0.3s ease;
-    }
-    
-    .card-inventory:hover {
-      transform: translateY(-5px);
-      box-shadow: 0 10px 20px rgba(0,0,0,0.1);
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Voice Inventory Manager</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .voice-button {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        .voice-button.listening {
+            background-color: #00ff00;
+            color: white;
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+    </style>
 </head>
-  <body class="bg-light">
-    <div class="container py-4">
-      <!-- Header -->
-      <header class="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom">
-        <div class="d-flex align-items-center">
-          <i class="bi bi-mic fs-3 me-2 text-primary"></i>
-          <label class="label success rounded-pill flex flex-column" style="width: 290px; height: 40px; background-color: #04AA6D; text-align: center; padding-top: 8px;">
-          <h1 class="h6 mb-2">Voice Inventory Manager</h1></label>
-        </div>
-        <button class="btn rounded-pill" data-bs-toggle="modal" data-bs-target="#settingsModal" onclick="getData()">
-          <i class="bi bi-gear me-1"></i>
-        </button>
-      </header>
+<body>
+    <div class="container my-4">
+        <h1 class="text-center mb-4">Voice Inventory Manager</h1>
 
-      <!-- Voice Control Section -->
-      <section class="my-4 text-center">
-        <div class="card shadow-sm p-4 mb-4">
-          <div class="d-flex justify-content-center align-items-center gap-5">
-
-            <!-- First Voice Control Button and Status -->
-            <div class="d-flex flex-column align-items-center">
-              
-              <button id="inwardButton" class="voice-button btn btn-light">
-                <i class="bi bi-mic fs-1"></i>
-              </button>
-              <h5 id="inwardStatus" class="mt-2">Inward</h5>
+        <!-- Voice Buttons for Inward/Outward -->
+        <div class="row justify-content-center mb-4">
+            <div class="col-md-4 text-center">
+                <button id="start-inward" class="voice-button btn btn-primary">Inward</button>
             </div>
-
-            <!-- Second Voice Control Button and Status -->
-            <div class="d-flex flex-column align-items-center">
-              
-              <button id="outwardButton" class="voice-button btn btn-light">
-                <i class="bi bi-mic fs-1"></i>
-              </button>
-              <h5 id="outwardStatus" class="mt-2">Outward</h5>
+            <div class="col-md-4 text-center">
+                <button id="start-outward" class="voice-button btn btn-primary">Outward</button>
             </div>
-          </div>
-          <div id="transcripts" class="mt-2 p-3 bg-light rounded d-none w-100 max-width-md"></div>
-          <div class="text-muted mt-3">
-            <p class="fw-medium">"Add Inward/Outward Inventories."</p>
-          </div>
         </div>
-        
-      </section>
-      
-      <!-- Inventory Table for Desktop -->
-      <section class="my-4 d-none d-md-block">
-        <div class="card shadow-sm p-3">
-          <div class="d-flex justify-content-between align-items-center mb-3">
-            <h2 class="h5 mb-0">Inventory Items</h2>
-            <div style="padding-left: 700px;"><button class="btn btn-sm btn-outline-primary rounded-pill" style="width: 100px;" onclick="saveInventory()">
-              <i class="bi bi-save me-1"></i> Save
-            </button></div>
-            <div class="dropdown">
-              <button class="btn btn-sm btn-outline-primary rounded-pill dropdown-toggle" style="width: 100px;" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                <i class="bi bi-download me-1"></i> Export
-              </button>
-              <ul class="dropdown-menu">
-                <input type="text" id="fileNameText" class="form-control rounded-pill" placeholder="File name">
-                <li><a class="dropdown-item" href="#" onclick="exportEntries('csv')">CSV</a></li>
-                <li><a class="dropdown-item" href="#" onclick="exportEntries('excel')">Excel</a></li>
-                <li><a class="dropdown-item" href="#" onclick="exportEntries('pdf')">PDF</a></li>
-              </ul>
-            </div>
-          </div>
-          <div class="table-responsive">
-            <table class="table table-hover">
-              <thead>
-                <tr>
-                  <th>#</th>
-                  <th>Time</th>
-                  <th>Vendor</th>
-                  <th>Item</th>
-                  <th>Quantity</th>
-                  <th>Session</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody id="inventoryTableBody">
-                <!-- Items will be dynamically added here -->
-              </tbody>
-            </table>
-          </div>
-          <div id="emptyState" class="text-center py-5">
-            <i class="bi bi-clipboard-x fs-1 text-muted"></i>
-            <p class="mt-2 mb-0 text-muted">No inventory items yet. Use voice commands to add items.</p>
-          </div>
-        </div>
-      </section>
-      
-      <!-- Inventory Cards for Mobile -->
-      <section class="my-4 d-block d-md-none">
-        <div class="d-flex justify-content-between align-items-center mb-3">
-          <h2 class="h5 mb-0">Inventory Items</h2>
-          <button class="btn btn-sm btn-outline-primary rounded-pill">
-            <i class="bi bi-download me-1"></i> Export
-          </button>
-        </div>
-        <div id="inventoryCards" class="row g-3">
-          <!-- Cards will be dynamically added here -->
-        </div>
-        <div id="emptyStateMobile" class="text-center py-5">
-          <i class="bi bi-clipboard-x fs-1 text-muted"></i>
-          <p class="mt-2 mb-0 text-muted">No inventory items yet. Use voice commands to add items.</p>
-        </div>
-      </section>
-    </div>
-    
-    <!-- Settings Modal -->
-    <div class="modal fade" id="settingsModal" tabindex="-1" aria-hidden="true">
-      <div class="modal-dialog">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title">Settings</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-          </div>
 
-          <div class="modal-body">         
-            <div class="mb-3">
-              <label class="form-label">Vendors</label>
-              <div class="input-group" style="padding-bottom:10px">
-                <input type="text" id="newVendor" class="form-control" placeholder="Add New Vendor">
-                <button class="btn btn-outline-secondary" type="button" id="addVendorButton" onclick="addVendor()">
-                  <i class="bi bi-plus"></i>
-                </button>
-              </div>
-              <div class="input-group" style="padding-bottom:10px">
-                <div class="mb-3 input-group">
-                  <select class="form-control" placeholder="Select Vendor" id="vendorSelector">
-                  </select>
-                  <button class="btn btn-outline-secondary" id="deleteVendorButton" onclick="deleteVendor()">
-                    <i class="bi bi-trash"></i>
-                  </button>
+        <!-- Test Beep Button -->
+        <div class="row justify-content-center mb-4">
+            <div class="col-md-4 text-center">
+                <button id="test-beep" class="btn btn-info">Test Beep</button>
+            </div>
+        </div>
+
+        <p class="text-center text-muted">"Add Inward/Outward Inventories."</p>
+
+        <!-- Inventory Items Section -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h3>Inventory Items</h3>
+            </div>
+            <div class="card-body">
+                <div class="d-flex justify-content-between mb-3">
+                    <button id="save-inventory" class="btn btn-success">Save</button>
+                    <div class="dropdown">
+                        <button class="btn btn-secondary dropdown-toggle" type="button" id="exportDropdown" data-bs-toggle="dropdown">
+                            Export
+                        </button>
+                        <ul class="dropdown-menu" aria-labelledby="exportDropdown">
+                            <li><a class="dropdown-item" href="#" data-format="csv">CSV</a></li>
+                            <li><a class="dropdown-item" href="#" data-format="excel">Excel</a></li>
+                            <li><a class="dropdown-item" href="#" data-format="pdf">PDF</a></li>
+                        </ul>
+                    </div>
                 </div>
-              </div>
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Time</th>
+                            <th>Vendor</th>
+                            <th>Item</th>
+                            <th>Quantity</th>
+                            <th>Session</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="inventory-table-body">
+                        <tr>
+                            <td colspan="7" class="text-center">No inventory items yet. Use voice commands to add items.</td>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
+        </div>
 
-            <div class="mb-3">
-              <label class="form-label">Materials</label>
-              <div class="input-group" style="padding-bottom:10px">
-                <input type="text" id="newMaterial" class="form-control" placeholder="Add New Material" style="width: 60%">
-                <input class="form-control" placeholder="Unit" list="unitSelector" id="newUnit" style="width: 10%">
-                <datalist id="unitSelector"> </datalist>
-                <button class="btn btn-outline-secondary" type="button" id="addMaterialButton" onclick="addMaterial()">
-                  <i class="bi bi-plus"></i>
-                </button>
-              </div>
-              <div class="input-group" style="padding-bottom:10px">
-                <div class="mb-3 input-group">
-                  <select class="form-control" placeholder="Select Material" id="materialSelector" style="width: 60%">        
-                  </select>
-                  <input type="text" placeholder="Unit" id="materialUnit" class="form-control" style="width: 10%" readonly>
-                  <button class="btn btn-outline-secondary" id="deleteMaterialButton" onclick="deleteMaterial()">
-                    <i class="bi bi-trash"></i>
-                  </button>
+        <!-- Settings Section -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h3>Settings</h3>
+            </div>
+            <div class="card-body">
+                <!-- Vendors -->
+                <div class="mb-3">
+                    <label class="form-label">Vendors</label>
+                    <select id="vendor-list" class="form-select mb-2"></select>
+                    <input type="text" id="new-vendor" class="form-control mb-2" placeholder="Add new vendor">
+                    <button id="add-vendor" class="btn btn-primary">Add</button>
+                    <button id="delete-vendor" class="btn btn-danger">Delete</button>
                 </div>
-              </div>
-            </div>
 
-            <div class="mb-3">
-              <label class="form-label">Import Vendor List (Excel)</label>
-              <div class="input-group" style="padding-bottom:10px">
-                <input type="file" id="vendorFileInput" class="form-control" accept=".xlsx,.xls" style="width: 60%">
-                <input class="form-control" placeholder="Column Name" id="vendorColumn" style="width: 30%">
-                <button class="btn btn-outline-secondary" type="button" id="importVendor" onclick="uploadExcel('vendors')">
-                  <i class="bi bi-upload"></i>
-                </button>
-              </div>
-              <label class="form-label">Import Material List (Excel)</label>
-              <div class="input-group" style="padding-bottom:10px">
-                <input type="file" id="materialFileInput" class="form-control" accept=".xlsx,.xls" style="width: 60%">
-                <input class="form-control" placeholder="Column Name" id="materialColumn" style="width: 30%">
-                <button class="btn btn-outline-secondary" type="button" id="importMaterial" onclick="uploadExcel('materials')">
-                  <i class="bi bi-upload"></i>
-                </button>
-              </div>
-              <label class="form-label">Import Unit List (Excel)</label>
-              <div class="input-group" style="padding-bottom:10px">
-                <input type="file" id="unitFileInput" class="form-control" accept=".xlsx,.xls" style="width: 60%">
-                <input class="form-control" placeholder="Column Name" id="unitColumn" style="width: 30%">
-                <button class="btn btn-outline-secondary" type="button" id="importUnit" onclick="uploadExcel('units')">
-                  <i class="bi bi-upload"></i>
-                </button>
-              </div>
-            </div>
-          </div>
+                <!-- Materials -->
+                <div class="mb-3">
+                    <label class="form-label">Materials</label>
+                    <select id="material-list" class="form-select mb-2"></select>
+                    <input type="text" id="new-material" class="form-control mb-2" placeholder="Add new material">
+                    <input type="text" id="new-unit" class="form-control mb-2" placeholder="Unit">
+                    <button id="add-material" class="btn btn-primary">Add</button>
+                    <button id="delete-material" class="btn btn-danger">Delete</button>
+                </div>
 
-          <div class="modal-footer">
-            <!-- <div style="padding-right:260px"><button type="button" class="btn btn-secondary" id="clearInventory()" onclick="uploadExcel('units')">Clear Inventory</button></div> -->
-            
-            <div class="dropdown" style="padding-right:200px">
-              <button class="btn btn-secondary dropdown-toggle" style="width: 140px;" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                <i class="bi bi-download me-1"></i> Clear JSON
-              </button>
-              <ul class="dropdown-menu">
-                <li><a class="dropdown-item" href="#" onclick="clearInventory('inventory')">Inventory</a></li>
-                <li><a class="dropdown-item" href="#" onclick="clearInventory('vendor')">Vendor</a></li>
-                <li><a class="dropdown-item" href="#" onclick="clearInventory('material')">Material</a></li>
-                <li><a class="dropdown-item" href="#" onclick="clearInventory('unit')">Unit</a></li>
-              </ul>
+                <!-- Import Excel -->
+                <div class="mb-3">
+                    <label class="form-label">Import Vendor List (Excel)</label>
+                    <input type="file" id="import-vendor-excel" class="form-control mb-2" accept=".xlsx">
+                    <button id="import-vendor-btn" class="btn btn-primary">Import</button>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Import Material List (Excel)</label>
+                    <input type="file" id="import-material-excel" class="form-control mb-2" accept=".xlsx">
+                    <button id="import-material-btn" class="btn btn-primary">Import</button>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Import Unit List (Excel)</label>
+                    <input type="file" id="import-unit-excel" class="form-control mb-2" accept=".xlsx">
+                    <button id="import-unit-btn" class="btn btn-primary">Import</button>
+                </div>
+
+                <!-- Clear JSON -->
+                <div class="mb-3">
+                    <label class="form-label">Clear JSON</label>
+                    <select id="clear-json" class="form-select mb-2">
+                        <option value="inventory.json">Inventory</option>
+                        <option value="vendors.json">Vendor</option>
+                        <option value="materials.json">Material</option>
+                        <option value="units.json">Unit</option>
+                    </select>
+                    <button id="clear-json-btn" class="btn btn-danger">Clear</button>
+                </div>
+
+                <button id="close-settings" class="btn btn-secondary">Close</button>
             </div>
-            <div style="padding-right:30px">
-              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-            </div>
-          </div>
         </div>
-      </div>
+
+        <!-- Notification -->
+        <div id="notification" class="alert alert-success" role="alert" style="display: none;">
+            Item added successfully.
+        </div>
     </div>
-    
-    <!-- Toast for notifications -->
-    <div class="toast-container position-fixed bottom-0 end-0 p-3">
-      <div id="notificationToast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
-        <div class="toast-header">
-          <strong class="me-auto" id="toastTitle">Notification</strong>
-          <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
-        </div>
-        <div class="toast-body" id="toastMessage">
-          Item added successfully.
-        </div>
-      </div>
-    </div>
-    
-    <!-- Bootstrap and other scripts -->
+
+    <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-
-      // Sample inventory data array
-      let inventoryItems = [];
-
-      function clearModal(){
-        vendorSelector.innerHTML = '';
-        materialSelector.innerHTML = '';
-      }
-
-      function getData(){
-        const url = '/data'; // Path to the data endpoint
-        fetch(url)
-        .then(response => response.json())
-        .then(data => {
-          // Clear existing options before populating
-          vendorSelector.innerHTML = '';
-          materialSelector.innerHTML = '';
-          unitSelector.innerHTML = '';
-            
-          data.vendors.forEach(vendor => {              
-            vendorSelector.options[vendorSelector.options.length] = new Option(vendor.vendor);
-          });
-
-          data.materials.forEach(material => {              
-            materialSelector.options[materialSelector.options.length] = new Option(material.material);
-          });
-
-          data.units.forEach(unit => {
-            const option = document.createElement('option');
-            option.value = unit.unit;
-            unitSelector.appendChild(option);
-          });
-          
-        })
-        .catch(error => console.error('Error fetching data:', error));
-      }
-
-      function addVendor(){
-        const newVendorInput = document.getElementById('newVendor');
-        const newVendor = newVendorInput.value.trim();
-        if (newVendor) {
-          fetch('/add_vendor', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ vendor: newVendor })
-          })
-          .then(response => response.json())
-          .then(data => {
-            if (data.message) {
-              console.log(`Vendor added: ${newVendor}`);
-              newVendorInput.value = ''; // Clear input field
-              getData();
-              showToast('Success', data.message);
-            }
-          })
-          .catch(error => console.error('Error adding vendor:', error));
-        }
-      }
-
-      function addMaterial(){        
-        const newMaterialInput = document.getElementById('newMaterial');
-        const newMaterial = newMaterialInput.value.trim();
-        const newMaterialUnitInput = document.getElementById('newUnit');
-        const newMaterialUnit = newMaterialUnitInput.value.trim();
-
-        if (newMaterial) {
-          fetch('/add_material', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ material: newMaterial, unit: newMaterialUnit })
-          })
-          .then(response => response.json())
-          .then(data => {
-            if (data.message) {
-              console.log(`Material added: ${newMaterial} (${newMaterialUnit})`);
-              newMaterialInput.value = ''; // Clear input field
-              showToast('Success', data.message);
-              getData();
-            }
-          })
-          .catch(error => console.error('Error adding material:', error));
-        }
-      }
-
-      function deleteVendor() {
-        const vendorSelector = document.getElementById('vendorSelector');
-        const vendor = vendorSelector.value;
-        if (vendor) {
-          fetch('/delete_vendor', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ vendor: vendor })
-          })
-          .then(response => {
-            if (!response.ok) {
-              throw new Error('Network response was not ok');
-            }
-            return response.json();
-          })
-          .then(data => {
-            if (data.success) {
-              console.log(`Deleted vendor: ${vendor}`);
-              vendorSelector.value = ''; // Clear the selection
-              showToast('Success', "Vendor deleted successfully!");
-              getData(); // Refresh the vendor dropdown
-            } else {
-              console.error('Error deleting vendor:', data.message);
-            }
-          })
-          .catch(error => console.error('Error:', error));
-        }
-      }
-
-      function deleteMaterial() {
-        const materialSelector = document.getElementById('materialSelector');
-        const material = materialSelector.value;
-        if (material) {
-          fetch('/delete_material', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ material: material })
-          })
-          .then(response => {
-            if (!response.ok) {
-              throw new Error('Network response was not ok');
-            }
-            return response.json();
-          })
-          .then(data => {
-            if (data.success) {
-              console.log(`Deleted material: ${material}`);
-              materialSelector.value = ''; // Clear the selection
-              showToast('Success', "Material deleted successfully!");
-              getData(); // Refresh the material dropdown
-            } else {
-              console.error('Error deleting material:', data.message);
-            }
-          })
-          .catch(error => console.error('Error:', error));
-        }
-      }
-
-      // POST request - to clear entries
-      async function clearInventory(fileType) {
-        if (fileType === 'inventory')
-          inputFile = 'inventory.json';
-        else if (fileType === 'vendor')
-          inputFile = 'vendors.json';
-        else if (fileType === 'material') 
-          inputFile = 'materials.json';
-        else if (fileType === 'unit')
-          inputFile = 'units.json';
-
-        const response = await fetch('/clear_entries', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({filename: inputFile}) // Send data to Flask
-        });
-        const result = await response.json(); // Get response from Flask
-        return result;
-      }
-
-      // POST request - to save entries
-      async function saveInventory() {
-        if (inventoryItems.length === 0) {
-          showToast('Error', 'No inventory items to save.');
-          return;
+        // Client-side audio functions
+        function speak(text) {
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.rate = 1.5;
+            window.speechSynthesis.speak(utterance);
         }
 
-        fetch('/save_inventory', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({ items: inventoryItems })
-        })
-        .then(response => response.json())
-        .then(data => {
-          if (data.message) {
-            showToast('Success', data.message);
-            inventoryItems = [];
-            window.updateInventoryUI();
-          } else {
-            showToast('Error', data.error || 'Failed to save inventory.');
-          }
-        })
-        .catch(error => {
-          console.error('Error saving inventory:', error);
-          showToast('Error', 'Failed to save inventory.');
-        });
-      };
+        function playBeep(frequency = 1000, duration = 200) {
+            try {
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                const audioCtx = new AudioContext();
 
-      // POST request - to export entries
-      async function exportEntries(format) {
-        const file_name = document.getElementById('fileNameText');
-
-        if(file_name.value)
-          filename = file_name.value        
-        else
-          filename = 'output_file'        
-
-        const response = await fetch('/export_entries', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({filename: filename, format: format}) // Send data to Flask
-        });
-        const result = await response.json(); // Get response from Flask
-        return result;
-      }
-
-      function uploadExcel(type) {
-        let fileInput, outputFile, columns;
-        
-        if (type === 'vendors') {
-          fileInput = document.getElementById('vendorFileInput');
-          column = document.getElementById('vendorColumn')
-          outputFile = 'vendors.json';
-          columns = column.value;
-        } else if (type === 'materials') {
-          fileInput = document.getElementById('materialFileInput');
-          column = document.getElementById('materialColumn')
-          outputFile = 'materials.json';
-          columns = column.value;
-        } else if (type === 'units') {
-          fileInput = document.getElementById('unitFileInput');
-          column = document.getElementById('unitColumn')
-          outputFile = 'units.json';
-          columns = column.value;
-        }
-
-        const file = fileInput.files[0];
-        if (!file) {
-          showToast('Error', 'Please select a file.');
-          return;
-        }
-
-        const formData = new FormData();
-        formData.append('file', file);
-        formData.append('output_file', outputFile);
-        formData.append('columns', columns);
-
-        fetch('/import_excel', {
-          method: 'POST',
-          body: formData
-        })
-        .then(response => response.json())
-        .then(data => {
-          if (data.message) {
-            showToast('Success', data.message);
-            fileInput.value = ''; // Clear the file input
-            getData(); // Refresh the dropdowns
-          } else {
-            showToast('Error', data.error || 'Failed to convert Excel to JSON.');
-          }
-        })
-        .catch(error => {
-          console.error('Error converting Excel:', error);
-          showToast('Error', 'Failed to convert Excel to JSON.');
-        });
-      }
-
-      // Function to show a toast notification
-      function showToast(title, message) {
-        document.getElementById('toastTitle').textContent = title;
-        document.getElementById('toastMessage').textContent = message;
-        const toast = new bootstrap.Toast(document.getElementById('notificationToast'));
-        toast.show();
-      }
-
-      // Sample JavaScript to handle UI interactions and voice recognition
-      document.addEventListener('DOMContentLoaded', function() {
-        // const voiceButton = document.getElementById('voiceButton');
-        const voiceStatus = document.getElementById('voiceStatus');
-        const transcript = document.getElementById('transcript');
-        const vendorDropdownButton = document.getElementById('vendorDropdownButton');
-
-        const inwardButton = document.getElementById('inwardButton');
-        const outwardButton = document.getElementById('outwardButton');
-        const inwardStatus = document.getElementById('inwardStatus');
-        const outwardStatus = document.getElementById('outwardStatus');
-        
-        // Sample inventory data array
-        // let inventoryItems = [];
-        
-        // Function to show a toast notification
-        function showToast(title, message) {
-          document.getElementById('toastTitle').textContent = title;
-          document.getElementById('toastMessage').textContent = message;
-          const toast = new bootstrap.Toast(document.getElementById('notificationToast'));
-          toast.show();
-        }
-
-        // Function to update the inventory
-        async function removeInventory(entry2Delete) {
-            const response = await fetch('/remove_entry', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({entry: entry2Delete}) // Send data to Flask
-            });
-            const result = await response.json(); // Get response from Flask
-            return result;
-        }
-
-        // Function to update the inventory UI
-        function updateInventoryUI() {
-          const tableBody = document.getElementById('inventoryTableBody');
-          const cardsContainer = document.getElementById('inventoryCards');
-          const emptyState = document.getElementById('emptyState');
-          const emptyStateMobile = document.getElementById('emptyStateMobile');
-          
-          // Clear existing content
-          tableBody.innerHTML = '';
-          cardsContainer.innerHTML = '';
-          
-          if (inventoryItems.length === 0) {
-            emptyState.classList.remove('d-none');
-            emptyStateMobile.classList.remove('d-none');
-          } else {
-            emptyState.classList.add('d-none');
-            emptyStateMobile.classList.add('d-none');
-            
-            // Update table view for desktop
-            inventoryItems.forEach((item, index) => {
-              const row = document.createElement('tr');
-              row.innerHTML = `
-                <td>${index + 1}</td>
-                <td>${item.date}</td>
-                <td>${item.vendor}</td>
-                <td>${item.item}</td>                
-                <td>${item.quantity} ${item.unit}</td>
-                <td>${item.session}</td>
-                <td>
-                  <button class="btn btn-sm btn-outline-danger" onclick="removeItem(${index})">
-                    <i class="bi bi-trash"></i>
-                  </button>
-                </td>
-              `;
-              tableBody.appendChild(row);
-              
-              // Create card for mobile view
-              const card = document.createElement('div');
-              card.className = 'col-12';
-              card.innerHTML = `
-                <div class="card card-inventory">
-                  <div class="card-body">
-                    <div class="d-flex justify-content-between">
-                      <span class="badge bg-primary rounded-pill mb-2">#${index + 1}</span>
-                      <button class="btn btn-sm text-danger" onclick="removeItem(${index})">
-                        <i class="bi bi-trash"></i>
-                      </button>
-                    </div>
-                    <h5 class="card-title">${item.item}</h5>
-                    <h6 class="card-subtitle mb-2 text-muted">${item.vendor}</h6>
-                    <p class="card-text">${item.quantity} ${item.unit}</p>
-                  </div>
-                </div>
-              `;
-              cardsContainer.appendChild(card);
-            });
-          }
-        }
-
-        window.updateInventoryUI = updateInventoryUI;
-        
-        // Function to add an inventory item
-        function addInventoryItem(date, vendor, item, quantity, unit, session) {
-          inventoryItems.push({
-            date: date,
-            vendor: vendor,
-            item: item,
-            quantity: quantity,
-            unit: unit,
-            session: session
-          });
-          updateInventoryUI();
-          showToast('Item Added', `Added ${quantity} ${unit} of ${item} from ${vendor} on $(date)`);
-        }
-        
-        // Function to remove an inventory item
-        window.removeItem = function(index) {
-          inventoryItems.splice(index, 1);
-          updateInventoryUI();
-          showToast('Item Removed', 'The inventory item has been removed');
-        };
-        
-        // Initialize the UI
-        updateInventoryUI();
-
-        // Function to update the inventory UI
-        function updateInventoryUI() {
-          const tableBody = document.getElementById('inventoryTableBody');
-          const cardsContainer = document.getElementById('inventoryCards');
-          const emptyState = document.getElementById('emptyState');
-          const emptyStateMobile = document.getElementById('emptyStateMobile');
-          
-          // Clear existing content
-          tableBody.innerHTML = '';
-          cardsContainer.innerHTML = '';
-          
-          if (inventoryItems.length === 0) {
-            emptyState.classList.remove('d-none');
-            emptyStateMobile.classList.remove('d-none');
-          } else {
-            emptyState.classList.add('d-none');
-            emptyStateMobile.classList.add('d-none');
-            
-            // Update table view for desktop
-            inventoryItems.forEach((item, index) => {
-              const row = document.createElement('tr');
-              row.innerHTML = `
-                <td>${index + 1}</td>
-                <td>${item.date}</td>
-                <td>${item.vendor}</td>
-                <td>${item.item}</td>
-                <td>${item.quantity} ${item.unit}</td>
-                <td>${item.session}</td>
-                <td>
-                  <button class="btn btn-sm btn-outline-danger" onclick="removeItem(${index})">
-                    <i class="bi bi-trash"></i>
-                  </button>
-                </td>
-              `;
-              tableBody.appendChild(row);
-              
-              // Create card for mobile view
-              const card = document.createElement('div');
-              card.className = 'col-12';
-              card.innerHTML = `
-                <div class="card card-inventory">
-                  <div class="card-body">
-                    <div class="d-flex justify-content-between">
-                      <span class="badge bg-primary rounded-pill mb-2">#${index + 1}</span>
-                      <button class="btn btn-sm text-danger" onclick="removeItem(${index})">
-                        <i class="bi bi-trash"></i>
-                      </button>
-                    </div>
-                    <h5 class="card-title">${item.item}</h5>
-                    <h6 class="card-subtitle mb-2 text-muted">${item.vendor}</h6>
-                    <p class="card-text">${item.quantity} ${item.unit}</p>
-                  </div>
-                </div>
-              `;
-              cardsContainer.appendChild(card);
-            });
-          }
-        }
-
-        // Function to add an inventory item
-        window.addInventoryItem = function(date, vendor, item, quantity, unit, session){
-          inventoryItems.push({
-            date: date,
-            vendor: vendor,
-            item: item,
-            quantity: quantity,
-            unit: unit,
-            session: session
-          });
-          updateInventoryUI();
-          showToast('Item Added', `Added ${quantity} ${unit} of ${item} from ${vendor} on ${date}`);
-        }
-        
-        // Function to remove an inventory item
-        window.removeItem = function(index) {
-          removeInventory(inventoryItems.at(index));
-          inventoryItems.splice(index, 1);
-          updateInventoryUI();
-          showToast('Item Removed', 'The inventory item has been removed');
-        };
-        
-        // Voice button click handler (would normally implement actual speech recognition)
-        inwardButton.addEventListener('click', function() {
-          if (!outwardButton.classList.contains('listening')) {
-            if (inwardButton.classList.contains('listening')) {
-              // Stop listening
-              inwardButton.classList.remove('listening');
-              inwardStatus.textContent = 'Inward';
-              showToast('Success', 'Inward session stopped.');
-              stopListening('inward').then(data => {
-                console.log(data);
-                // showToast('Success', data.message);
-              });
-            } else {
-              // Start listening
-              inwardButton.classList.add('listening');
-              inwardStatus.textContent = 'Listening...';
-              showToast('Success', 'Inward session started.');
-              startListening('inward').then(data => {
-                console.log(data);
-                // showToast('Success', data.message);
-              });
-            }
-          }
-        });   
-
-        // Voice button click handler (would normally implement actual speech recognition)
-        outwardButton.addEventListener('click', function() {
-          if (!inwardButton.classList.contains('listening')) {
-            if (outwardButton.classList.contains('listening')) {
-              // Stop listening
-              outwardButton.classList.remove('listening');
-              outwardStatus.textContent = 'Outward';
-              showToast('Success', 'Outward session stopped.');
-              stopListening('outward').then(data => {
-                console.log(data);
-              });
-            } else {
-              // Start listening
-              outwardButton.classList.add('listening');
-              outwardStatus.textContent = 'Listening...';
-              showToast('Success', 'Outward session started.');
-              startListening('outward').then(data => {
-                console.log(data);
-              });
-            }          
-          }
-        });
-
-        // POST request - to start listening
-        async function startListening(sessionType) {
-            const response = await fetch('/start_listening', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({session: sessionType}) // Send data to Flask
-            });
-            const result = await response.json(); // Get response from Flask
-            return result;
-        }
-
-        // POST request - to stop listening
-        async function stopListening(sessionType) {
-            const response = await fetch('/stop_listening', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({session: sessionType}) // Send data to Flask
-            });
-            const result = await response.json(); // Get response from Flask
-            return result;
-        }
-
-        materialSelector.addEventListener('change', function() {
-          const selectedMaterial = this.options[this.selectedIndex].text;
-          
-          const url = '/get_materials'; // Path to the data endpoint
-          fetch(url)
-          .then(response => response.json())
-          .then(data => {                    
-            data.materials.forEach(material => {              
-              if(material.material == selectedMaterial){
-                materialUnit.value = material.unit;
-                console.log('Selected material:', selectedMaterial, material.unit); 
-              }
-            });          
-          })
-        .catch(error => console.error('Error fetching data:', error));
-        });
-
-      });
-
-      // POST request - to start listening
-      async function session_response() {
-          const response = await fetch('/session_complete', {
-              method: 'POST',
-              headers: {
-                  'Content-Type': 'application/json',
-              },
-              body: JSON.stringify() // Send data to Flask
-          });
-          const result = await response.json(); // Get response from Flask
-          return result;
-      }
-
-
-      setInterval(() => {
-        fetch('/session_status')
-            .then(response => response.json())
-            .then(data => {
-                // console.log("Data:")
-                // console.log(inventoryItems.at(0));
-                
-                if (!data.active) {
-                  // showToast('Success', 'Session completed.');
-                  inwardStatus.textContent = 'Inward';
-                  outwardStatus.textContent = 'Outward';
-                  inwardButton.classList.remove('listening');
-                  outwardButton.classList.remove('listening');
-                }
-                if(data.entry.length){                
-                  addInventoryItem(data.entry[0][0], data.entry[0][1], data.entry[0][2], data.entry[0][3], data.entry[0][4], data.entry[0][5]);
-                    
-                  session_response()
+                // Ensure the audio context is resumed (required for some browsers after user interaction)
+                if (audioCtx.state === 'suspended') {
+                    audioCtx.resume().then(() => {
+                        console.log('AudioContext resumed successfully');
+                    }).catch(err => console.error('Error resuming AudioContext:', err));
                 }
 
+                const oscillator = audioCtx.createOscillator();
+                oscillator.type = 'sine';
+                oscillator.frequency.setValueAtTime(frequency, audioCtx.currentTime);
+                oscillator.connect(audioCtx.destination);
+                oscillator.start();
+                oscillator.stop(audioCtx.currentTime + duration / 1000);
+            } catch (error) {
+                console.error('Error playing beep:', error);
+            }
+        }
+
+        function beepPromptSupplier() {
+            playBeep(800, 200);
+        }
+
+        function beepPromptItem() {
+            playBeep(800, 200);
+        }
+
+        function beepPromptQuantity() {
+            playBeep(800, 200);
+        }
+
+        function beepInvalidInput() {
+            playBeep(3000, 800);
+        }
+
+        function beepItemAdded() {
+            playBeep(1200, 200);
+            setTimeout(() => playBeep(1200, 200), 100);
+        }
+
+        // Client-side speech recognition
+        function audioToText(callback) {
+            try {
+                const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+                if (!SpeechRecognition) {
+                    console.error('SpeechRecognition API not supported in this browser.');
+                    showNotification('Speech recognition not supported. Please use Chrome or Edge.');
+                    return;
+                }
+
+                const recognition = new SpeechRecognition();
+                recognition.lang = 'en-IN';
+                recognition.interimResults = false;
+                recognition.maxAlternatives = 1;
+
+                recognition.onstart = () => {
+                    console.log('Speech recognition started. Listening...');
+                };
+
+                recognition.onresult = (event) => {
+                    const text = event.results[0][0].transcript.toLowerCase();
+                    console.log(`You said: ${text}`);
+                    callback(text);
+                };
+
+                recognition.onerror = (event) => {
+                    console.error('Speech recognition error:', event.error);
+                    showNotification(`Speech recognition error: ${event.error}`);
+                    callback(null);
+                };
+
+                recognition.onend = () => {
+                    console.log('Speech recognition ended.');
+                };
+
+                recognition.start();
+            } catch (error) {
+                console.error('Error initializing speech recognition:', error);
+                showNotification('Error initializing speech recognition. Please try again.');
+                callback(null);
+            }
+        }
+
+        // Fetch and populate vendors
+        async function loadVendors() {
+            const response = await fetch('/get_vendors');
+            const data = await response.json();
+            const vendorList = document.getElementById('vendor-list');
+            vendorList.innerHTML = '';
+            data.vendors.forEach(vendor => {
+                const option = document.createElement('option');
+                option.value = vendor.vendor;
+                option.textContent = vendor.vendor;
+                vendorList.appendChild(option);
             });
-      }, 5000); // Poll every 5 seconds
+        }
+
+        // Fetch and populate materials
+        async function loadMaterials() {
+            const response = await fetch('/get_materials');
+            const data = await response.json();
+            const materialList = document.getElementById('material-list');
+            materialList.innerHTML = '';
+            data.materials.forEach(material => {
+                const option = document.createElement('option');
+                option.value = material.material;
+                option.textContent = `${material.material} (${material.unit})`;
+                materialList.appendChild(option);
+            });
+        }
+
+        // Load inventory items
+        async function loadInventory() {
+            const response = await fetch('/session_status');
+            const data = await response.json();
+            const tableBody = document.getElementById('inventory-table-body');
+            tableBody.innerHTML = '';
+            if (data.entry && data.entry.length > 0) {
+                data.entry.forEach((item, index) => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${index + 1}</td>
+                        <td>${item[0]}</td>
+                        <td>${item[1]}</td>
+                        <td>${item[2]}</td>
+                        <td>${item[3]} ${item[4]}</td>
+                        <td>${item[5]}</td>
+                        <td><button class="btn btn-danger btn-sm remove-entry" data-entry='${JSON.stringify(item)}'>Remove</button></td>
+                    `;
+                    tableBody.appendChild(row);
+                });
+            } else {
+                tableBody.innerHTML = '<tr><td colspan="7" class="text-center">No inventory items yet. Use voice commands to add items.</td></tr>';
+            }
+        }
+
+        // Show notification
+        function showNotification(message) {
+            const notification = document.getElementById('notification');
+            notification.textContent = message;
+            notification.style.display = 'block';
+            setTimeout(() => notification.style.display = 'none', 3000);
+        }
+
+        // Handle voice input process
+        async function handleVoiceInput(sessionType, button) {
+            let currentStep = 'vendor';
+            let vendor = null;
+            let material = null;
+            let attemptCount = 0;
+
+            console.log(`Starting voice input for session: ${sessionType}`); // Debug log
+
+            const processStep = async () => {
+                if (attemptCount > 4) {
+                    speak("Too many failed attempts. Session stopped.");
+                    button.classList.remove('listening');
+                    return;
+                }
+
+                if (currentStep === 'vendor') {
+                    console.log('Step: Vendor - Prompting for vendor name'); // Debug log
+                    beepPromptSupplier();
+                    audioToText(async (text) => {
+                        if (!text || text === 'stop' || text === 'exit' || text === 'done' || text === 'close') {
+                            console.log('User stopped the session'); // Debug log
+                            fetch('/stop_listening', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ session: sessionType })
+                            }).then(() => {
+                                speak("Session completed.");
+                                button.classList.remove('listening');
+                            });
+                            return;
+                        }
+
+                        console.log(`Sending vendor text to server: ${text}`); // Debug log
+                        const response = await fetch('/process_vendor', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ vendor: text })
+                        });
+                        const data = await response.json();
+                        console.log('Vendor response:', data); // Debug log
+
+                        if (data.beep === 'correct') {
+                            vendor = data.vendor;
+                            currentStep = data.next;
+                            attemptCount = 0;
+                            speak(`Vendor ${vendor} matched.`);
+                            processStep();
+                        } else {
+                            beepInvalidInput();
+                            speak("Vendor not found. Please try again.");
+                            attemptCount++;
+                            processStep();
+                        }
+                    });
+                } else if (currentStep === 'material') {
+                    console.log('Step: Material - Prompting for material name'); // Debug log
+                    beepPromptItem();
+                    audioToText(async (text) => {
+                        if (!text || text === 'stop' || text === 'exit' || text === 'done' || text === 'close') {
+                            console.log('User stopped the session'); // Debug log
+                            fetch('/stop_listening', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ session: sessionType })
+                            }).then(() => {
+                                speak("Session completed.");
+                                button.classList.remove('listening');
+                            });
+                            return;
+                        }
+
+                        console.log(`Sending material text to server: ${text}`); // Debug log
+                        const response = await fetch('/process_material', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ vendor: vendor, material: text })
+                        });
+                        const data = await response.json();
+                        console.log('Material response:', data); // Debug log
+
+                        if (data.beep === 'correct') {
+                            material = data.material;
+                            currentStep = data.next;
+                            attemptCount = 0;
+                            speak(`Material ${material} matched.`);
+                            processStep();
+                        } else {
+                            beepInvalidInput();
+                            speak("Material not found. Please try again.");
+                            attemptCount++;
+                            processStep();
+                        }
+                    });
+                } else if (currentStep === 'quantity') {
+                    console.log('Step: Quantity - Prompting for quantity'); // Debug log
+                    beepPromptQuantity();
+                    audioToText(async (text) => {
+                        if (!text || text === 'stop' || text === 'exit' || text === 'done' || text === 'close') {
+                            console.log('User stopped the session'); // Debug log
+                            fetch('/stop_listening', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ session: sessionType })
+                            }).then(() => {
+                                speak("Session completed.");
+                                button.classList.remove('listening');
+                            });
+                            return;
+                        }
+
+                        console.log(`Sending quantity text to server: ${text}`); // Debug log
+                        const response = await fetch('/process_quantity', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ vendor: vendor, material: material, quantity: text, session: sessionType })
+                        });
+                        const data = await response.json();
+                        console.log('Quantity response:', data); // Debug log
+
+                        if (data.beep === 'item_added') {
+                            beepItemAdded();
+                            speak("Item added successfully.");
+                            showNotification("Item added successfully.");
+                            loadInventory();
+                            currentStep = 'material'; // Loop back to material for more items
+                            attemptCount = 0;
+                            processStep();
+                        } else {
+                            beepInvalidInput();
+                            speak("Invalid quantity. Please try again.");
+                            attemptCount++;
+                            processStep();
+                        }
+                    });
+                }
+            };
+
+            button.classList.add('listening');
+            speak("System ready.");
+            processStep();
+        }
+
+        // Event Listeners
+        document.addEventListener('DOMContentLoaded', () => {
+            loadVendors();
+            loadMaterials();
+            loadInventory();
+
+            // Test Beep
+            document.getElementById('test-beep').addEventListener('click', () => {
+                playBeep(800, 200);
+                console.log('Test beep played');
+            });
+
+            // Start Inward/Outward
+            document.getElementById('start-inward').addEventListener('click', (e) => {
+                if (!e.target.classList.contains('listening')) {
+                    fetch('/start_listening', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ session: 'inward' })
+                    }).then(() => {
+                        handleVoiceInput('inward', e.target);
+                    });
+                }
+            });
+
+            document.getElementById('start-outward').addEventListener('click', (e) => {
+                if (!e.target.classList.contains('listening')) {
+                    fetch('/start_listening', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ session: 'outward' })
+                    }).then(() => {
+                        handleVoiceInput('outward', e.target);
+                    });
+                }
+            });
+
+            // Add Vendor
+            document.getElementById('add-vendor').addEventListener('click', async () => {
+                const newVendor = document.getElementById('new-vendor').value;
+                if (newVendor) {
+                    const response = await fetch('/add_vendor', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ vendor: newVendor })
+                    });
+                    const data = await response.json();
+                    showNotification(data.message);
+                    loadVendors();
+                    document.getElementById('new-vendor').value = '';
+                }
+            });
+
+            // Delete Vendor
+            document.getElementById('delete-vendor').addEventListener('click', async () => {
+                const vendor = document.getElementById('vendor-list').value;
+                if (vendor) {
+                    const response = await fetch('/delete_vendor', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ vendor })
+                    });
+                    const data = await response.json();
+                    showNotification(data.message || 'Vendor deleted successfully.');
+                    loadVendors();
+                }
+            });
+
+            // Add Material
+            document.getElementById('add-material').addEventListener('click', async () => {
+                const newMaterial = document.getElementById('new-material').value;
+                const newUnit = document.getElementById('new-unit').value;
+                if (newMaterial) {
+                    const response = await fetch('/add_material', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ material: newMaterial, unit: newUnit || 'undefined' })
+                    });
+                    const data = await response.json();
+                    showNotification(data.message);
+                    loadMaterials();
+                    document.getElementById('new-material').value = '';
+                    document.getElementById('new-unit').value = '';
+                }
+            });
+
+            // Delete Material
+            document.getElementById('delete-material').addEventListener('click', async () => {
+                const material = document.getElementById('material-list').value;
+                if (material) {
+                    const response = await fetch('/delete_material', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ material })
+                    });
+                    const data = await response.json();
+                    showNotification(data.message || 'Material deleted successfully.');
+                    loadMaterials();
+                }
+            });
+
+            // Import Excel
+            document.getElementById('import-vendor-btn').addEventListener('click', async () => {
+                const fileInput = document.getElementById('import-vendor-excel');
+                if (fileInput.files.length > 0) {
+                    const formData = new FormData();
+                    formData.append('file', fileInput.files[0]);
+                    formData.append('output_file', 'vendors.json');
+                    formData.append('columns', 'vendor');
+                    const response = await fetch('/import_excel', {
+                        method: 'POST',
+                        body: formData
+                    });
+                    const data = await response.json();
+                    console.log('Import vendor response:', data); // Debug log
+                    showNotification(data.message);
+                    await loadVendors(); // Ensure vendors are reloaded
+                    console.log('Vendors reloaded after import'); // Debug log
+                    fileInput.value = '';
+                } else {
+                    showNotification('Please select an Excel file to import.');
+                }
+            });
+
+            document.getElementById('import-material-btn').addEventListener('click', async () => {
+                const fileInput = document.getElementById('import-material-excel');
+                if (fileInput.files.length > 0) {
+                    const formData = new FormData();
+                    formData.append('file', fileInput.files[0]);
+                    formData.append('output_file', 'materials.json');
+                    formData.append('columns', 'material');
+                    const response = await fetch('/import_excel', {
+                        method: 'POST',
+                        body: formData
+                    });
+                    const data = await response.json();
+                    console.log('Import material response:', data); // Debug log
+                    showNotification(data.message);
+                    await loadMaterials(); // Ensure materials are reloaded
+                    console.log('Materials reloaded after import'); // Debug log
+                    fileInput.value = '';
+                } else {
+                    showNotification('Please select an Excel file to import.');
+                }
+            });
+
+            document.getElementById('import-unit-btn').addEventListener('click', async () => {
+                const fileInput = document.getElementById('import-unit-excel');
+                if (fileInput.files.length > 0) {
+                    const formData = new FormData();
+                    formData.append('file', fileInput.files[0]);
+                    formData.append('output_file', 'units.json');
+                    formData.append('columns', 'unit');
+                    const response = await fetch('/import_excel', {
+                        method: 'POST',
+                        body: formData
+                    });
+                    const data = await response.json();
+                    console.log('Import unit response:', data); // Debug log
+                    showNotification(data.message);
+                    fileInput.value = '';
+                } else {
+                    showNotification('Please select an Excel file to import.');
+                }
+            });
+
+            // Clear JSON
+            document.getElementById('clear-json-btn').addEventListener('click', async () => {
+                const filename = document.getElementById('clear-json').value;
+                const response = await fetch('/clear_entries', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ filename })
+                });
+                const data = await response.json();
+                showNotification(data.message);
+                if (filename === 'inventory.json') loadInventory();
+                if (filename === 'vendors.json') loadVendors();
+                if (filename === 'materials.json') loadMaterials();
+            });
+
+            // Save Inventory
+            document.getElementById('save-inventory').addEventListener('click', async () => {
+                const response = await fetch('/session_status');
+                const data = await response.json();
+                if (data.entry && data.entry.length > 0) {
+                    const response = await fetch('/save_inventory', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ items: data.entry })
+                    });
+                    const saveData = await response.json();
+                    showNotification(saveData.message);
+                    fetch('/session_complete');
+                    loadInventory();
+                } else {
+                    showNotification("No items to save.");
+                }
+            });
+
+            // Export Inventory
+            document.querySelectorAll('#exportDropdown .dropdown-item').forEach(item => {
+                item.addEventListener('click', async (e) => {
+                    const format = e.target.getAttribute('data-format');
+                    const filename = `inventory_export_${new Date().toISOString().split('T')[0]}`;
+                    const response = await fetch('/export_entries', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ filename, format })
+                    });
+                    const data = await response.json();
+                    if (data.success) {
+                        showNotification(data.message);
+                        window.location.href = `/download/${data.filename}`;
+                    }
+                });
+            });
+
+            // Remove Entry
+            document.getElementById('inventory-table-body').addEventListener('click', async (e) => {
+                if (e.target.classList.contains('remove-entry')) {
+                    const entry = JSON.parse(e.target.getAttribute('data-entry'));
+                    const response = await fetch('/remove_entry', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ entry })
+                    });
+                    const data = await response.json();
+                    showNotification(data.message);
+                    loadInventory();
+                }
+            });
+        });
     </script>
-  </body>
+</body>
 </html>
