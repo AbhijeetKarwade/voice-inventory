@@ -3,4 +3,11 @@ services:
     name: voice-inventory
     env: python
     buildCommand: pip install -r requirements.txt
-    startCommand: python app.py
+    startCommand: gunicorn app:app --workers 2 --bind 0.0.0.0:$PORT
+    envVars:
+      - key: FLASK_ENV
+        value: production
+    disks:
+      - name: data
+        mountPath: /opt/render/project/data
+        sizeGB: 1
