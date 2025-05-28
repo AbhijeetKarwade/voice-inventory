@@ -121,16 +121,19 @@
                 <div class="mb-3">
                     <label class="form-label">Import Vendor List (Excel)</label>
                     <input type="file" id="import-vendor-excel" class="form-control mb-2" accept=".xlsx">
+                    <input type="text" id="vendor-column-name" class="form-control mb-2" placeholder="Enter vendor column name (e.g., vendor)">
                     <button id="import-vendor-btn" class="btn btn-primary">Import</button>
                 </div>
                 <div class="mb-3">
                     <label class="form-label">Import Material List (Excel)</label>
                     <input type="file" id="import-material-excel" class="form-control mb-2" accept=".xlsx">
+                    <input type="text" id="material-column-name" class="form-control mb-2" placeholder="Enter material column name (e.g., material)">
                     <button id="import-material-btn" class="btn btn-primary">Import</button>
                 </div>
                 <div class="mb-3">
                     <label class="form-label">Import Unit List (Excel)</label>
                     <input type="file" id="import-unit-excel" class="form-control mb-2" accept=".xlsx">
+                    <input type="text" id="unit-column-name" class="form-control mb-2" placeholder="Enter unit column name (e.g., unit)">
                     <button id="import-unit-btn" class="btn btn-primary">Import</button>
                 </div>
 
@@ -561,11 +564,17 @@
             // Import Excel
             document.getElementById('import-vendor-btn').addEventListener('click', async () => {
                 const fileInput = document.getElementById('import-vendor-excel');
+                const columnNameInput = document.getElementById('vendor-column-name');
+                const columnName = columnNameInput.value.trim();
                 if (fileInput.files.length > 0) {
+                    if (!columnName) {
+                        showNotification('Please enter the vendor column name.');
+                        return;
+                    }
                     const formData = new FormData();
                     formData.append('file', fileInput.files[0]);
                     formData.append('output_file', 'vendors.json');
-                    formData.append('columns', 'vendor');
+                    formData.append('columns', columnName);
                     const response = await fetch('/import_excel', {
                         method: 'POST',
                         body: formData
@@ -576,6 +585,7 @@
                     await loadVendors(); // Ensure vendors are reloaded
                     console.log('Vendors reloaded after import'); // Debug log
                     fileInput.value = '';
+                    columnNameInput.value = '';
                 } else {
                     showNotification('Please select an Excel file to import.');
                 }
@@ -583,11 +593,17 @@
 
             document.getElementById('import-material-btn').addEventListener('click', async () => {
                 const fileInput = document.getElementById('import-material-excel');
+                const columnNameInput = document.getElementById('material-column-name');
+                const columnName = columnNameInput.value.trim();
                 if (fileInput.files.length > 0) {
+                    if (!columnName) {
+                        showNotification('Please enter the material column name.');
+                        return;
+                    }
                     const formData = new FormData();
                     formData.append('file', fileInput.files[0]);
                     formData.append('output_file', 'materials.json');
-                    formData.append('columns', 'material');
+                    formData.append('columns', columnName);
                     const response = await fetch('/import_excel', {
                         method: 'POST',
                         body: formData
@@ -598,6 +614,7 @@
                     await loadMaterials(); // Ensure materials are reloaded
                     console.log('Materials reloaded after import'); // Debug log
                     fileInput.value = '';
+                    columnNameInput.value = '';
                 } else {
                     showNotification('Please select an Excel file to import.');
                 }
@@ -605,11 +622,17 @@
 
             document.getElementById('import-unit-btn').addEventListener('click', async () => {
                 const fileInput = document.getElementById('import-unit-excel');
+                const columnNameInput = document.getElementById('unit-column-name');
+                const columnName = columnNameInput.value.trim();
                 if (fileInput.files.length > 0) {
+                    if (!columnName) {
+                        showNotification('Please enter the unit column name.');
+                        return;
+                    }
                     const formData = new FormData();
                     formData.append('file', fileInput.files[0]);
                     formData.append('output_file', 'units.json');
-                    formData.append('columns', 'unit');
+                    formData.append('columns', columnName);
                     const response = await fetch('/import_excel', {
                         method: 'POST',
                         body: formData
@@ -618,6 +641,7 @@
                     console.log('Import unit response:', data); // Debug log
                     showNotification(data.message);
                     fileInput.value = '';
+                    columnNameInput.value = '';
                 } else {
                     showNotification('Please select an Excel file to import.');
                 }
