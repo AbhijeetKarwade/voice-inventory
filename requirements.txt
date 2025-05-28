@@ -8,3 +8,4 @@ unidecode
 fuzzywuzzy
 speechrecognition
 gunicorn
+python-Levenshtein
