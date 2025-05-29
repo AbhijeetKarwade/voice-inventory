@@ -9,3 +9,5 @@ fuzzywuzzy
 speechrecognition
 gunicorn
 python-Levenshtein
+
+

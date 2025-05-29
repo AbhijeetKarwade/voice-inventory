@@ -91,6 +91,67 @@
                 </table>
             </div>
         </div>
+       
+
+        <div class="settings-content">
+    <!-- Existing Vendors and Materials sections -->
+    <div class="settings-item">
+        <h3>Vendors</h3>
+        <input type="text" id="vendor-input" placeholder="Enter vendor name">
+        <button onclick="addVendor()">Add</button>
+        <button onclick="deleteVendor()">Delete</button>
+    </div>
+    <div class="settings-item">
+        <h3>Materials</h3>
+        <input type="text" id="material-input" placeholder="Enter material name">
+        <input type="text" id="material-unit-input" placeholder="Enter unit">
+        <button onclick="addMaterial()">Add</button>
+        <button onclick="deleteMaterial()">Delete</button>
+    </div>
+    <!-- New Units section -->
+    <div class="settings-item">
+        <h3>Units</h3>
+        <input type="text" id="unit-input" placeholder="Enter unit name">
+        <button onclick="addUnit()">Add</button>
+        <button onclick="deleteUnit()">Delete</button>
+    </div>
+    <!-- Existing Import and Clear sections -->
+    <!-- Add JavaScript for addUnit and deleteUnit -->
+    <script>
+        function addUnit() {
+            const unit = document.getElementById('unit-input').value;
+            if (unit) {
+                fetch('/add_unit', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ unit })
+                })
+                .then(response => response.json())
+                .then(data => alert(data.message))
+                .catch(error => alert('Error adding unit: ' + error));
+            } else {
+                alert('Please enter a unit name');
+            }
+        }
+
+        function deleteUnit() {
+            const unit = document.getElementById('unit-input').value;
+            if (unit) {
+                fetch('/delete_unit', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ unit })
+                })
+                .then(response => response.json())
+                .then(data => alert(data.message))
+                .catch(error => alert('Error deleting unit: ' + error));
+            } else {
+                alert('Please enter a unit name');
+            }
+        }
+    </script>
+</div>
+
 
         <!-- Settings Section -->
         <div class="card mb-4">
